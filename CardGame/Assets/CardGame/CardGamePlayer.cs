@@ -20,6 +20,7 @@ public class CardGamePlayer : CardGamePlayerBehavior
     public Toggle nextButton;
 
     void Start () {
+        //setup network variables
         if (networkObject.IsOwner)
         {
             nextButton.transform.SetParent(Component.FindObjectOfType<Canvas>().transform);
@@ -33,6 +34,16 @@ public class CardGamePlayer : CardGamePlayerBehavior
         {
             Destroy(nextButton.gameObject);
             nextButton = null;
+        }
+
+        //load deck
+        if (networkObject.IsServer)
+        {
+            for(int i = 0; i<50; i++)
+            {
+                CardReference cr = new CardReference();
+                deck.Add(cr);
+            }
         }
     }
 	void Update () {
@@ -94,5 +105,20 @@ public class CardGamePlayer : CardGamePlayerBehavior
     {
         field = Utils.DeserializeObject<List<CardReference>>(args.GetNext<string>());
         RefreshField();
+    }
+
+    internal void DrawFromDeck(int qty = 1)
+    {
+        for (int i = 0; i < qty; i++)
+        {
+            hand.Add(deck[deck.Count - 1]);
+            deck.RemoveAt(deck.Count - 1);
+        }
+    }
+
+    internal void SyncAll()
+    {
+        networkObject.SendRpc(RPC_SYNC_DECK, Receivers.All, Utils.SerializeObject(deck));
+        networkObject.SendRpc(RPC_SYNC_HAND, Receivers.All, Utils.SerializeObject(hand));
     }
 }

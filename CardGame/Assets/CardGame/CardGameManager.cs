@@ -72,7 +72,17 @@ public class CardGameManager : CardGameManagerBehavior {
                 networkObject.SendRpc(RPC_FULL_STATE_UPDATE, Receivers.Others, Utils.SerializeObject<GameState>(state));
                 RefreshText();
             }
+
+            if (state.phase == TurnPhase.Draw)
+                DrawStep();
         }
+    }
+    public void DrawStep()
+    {
+        foreach (var player in players)
+            player.DrawFromDeck();
+        foreach (var player in players)
+            player.SyncAll();
     }
 
     private void RefreshText()
